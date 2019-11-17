@@ -282,19 +282,70 @@ protected route
 
 token will be stored in localstorage, can do it on react
 
-//middleware takes req, res, next
-  //ensure user is logged in
-  function protected(req, res, next){
-    let {username, password} = req.headers
-     if 
-    (username && password){
-      Users.findBy({username})
-      //database queries return an array, but we are looking for an object, use .first()
-      .first()
-      .then(user => {
-        if(user && bcrypt.compareSync(password, user.password)){
-            
-          next()
+
+to test in insomina - add token without quotes to header
+Authorization (token without quotes)
+
+const jwtKey =
+  process.env.JWT_SECRET ||
+  "aslskek34l4kfnad";
+
+// quickly see what this file exports
+module.exports = {
+  authenticate,
+};
+
+// implementation details
+function authenticate(req, res, next) {
+  const token = req.get('Authorization');
+
+  if (token) {
+    jwt.verify(token, jwtKey, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({
+            message: "Invalid Credentials"});
+      } else {
+        req.decoded = decoded;
+
+        next();
+        }
+    })} else {
+        return res.status(401).json({message: "No credentials provided"})
+    }
+}
+---------------------------------------------------
+add additional middleware, to access certain areas of site
+
+example, add: role
+
+1st. include role when token is generated
+
+function getJwtToken(username) {
+  const payload = {
+    username,
+    role: "student" // this will probably come from the database
+  };
+
+  const secret = process.env.JWT_SECRET || "is it secret, is it safe?";
+
+  const options = {
+    expiresIn: "1d"
+  };
+
+  return jwt.sign(payload, secret, options);
+}
+
+add role and as an additional piece of middleware
+
+router.get('/', authenticate, role, (req, res) => {
+    UsersModel.find()
+    .then(users => {
+        res.json(users)
+    })
+    .catch(err => res.send(err))
+})
+
+
 --------------------------------------------------------------------------------------------------------          
 express-session
 npm i express-session

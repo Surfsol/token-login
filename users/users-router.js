@@ -3,6 +3,19 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const UsersModel = require('./users-model')
 
+const {authenticate} = require('../auth/auth-middleware')
+
+const secret = require('../config/secrets')
+
+router.get('/', authenticate, (req, res) => {
+    UsersModel.find()
+    .then(users => {
+        res.json(users)
+    })
+    .catch(err => res.send(err))
+})
+
+
 router.post('/register', (req, res)=>{
     let user = req.body
 
@@ -11,8 +24,9 @@ router.post('/register', (req, res)=>{
     
     UsersModel.add(user)
         .then(saved => {
+            const token = generateToken(user)
             console.log(saved)
-            res.status(201).json(saved)
+            res.status(201).json({saved, token})
         })
         .catch(err => {
             res.status(500).json(err)
@@ -45,17 +59,17 @@ function generateToken(user){
     console.log(`username`, username)
     
   const payload = {
-      subject: user.id, //sub property in header
-      username
-      //additional data, do not include sensitve info
+      subject: user.id, //sub property in header, normally user id
+      username // = username: user.username
+      //additional data, do not include sensitve info, role: user.role 
   }
- 
-  const secret = process.env.JWT_SECRET || "aslskek34l4kfnad"
+
   const options = {
       expiresIn : '8h'
   }
   console.log(`payload`, payload, secret, options)
-  return jwt.sign(payload, secret, options)
+  //secret comes from config/secrets
+  return jwt.sign(payload, secret.jwtSecret, options)
 }
 
 router.get("/logout", (req, res) => {
@@ -78,5 +92,6 @@ router.get("/logout", (req, res) => {
       res.status(200).json({ message: "come back soon" });
     }
   });
+
 
   module.exports = router;
