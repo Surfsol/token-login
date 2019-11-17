@@ -168,6 +168,8 @@ api:
 //export / import router and middleware to server.js
 //require project routers to server.js
 
+npm i bcryptjs jsonwebtoken
+
 const express = require('express')
 
 const server = express()
@@ -277,6 +279,8 @@ const bcrypt = require('bcryptjs')
 
 ----------------------------------------------------------------------------------------
 protected route
+
+token will be stored in localstorage, can do it on react
 
 //middleware takes req, res, next
   //ensure user is logged in
